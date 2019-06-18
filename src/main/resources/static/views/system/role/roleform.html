@@ -1,0 +1,52 @@
+<link rel="stylesheet" type="text/css" href="../../../lib/extend/easyui.css">
+<div class="layui-form" lay-filter="layui-form-role" style="padding: 20px 30px 0 0;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">角色名称：</label>
+        <div class="layui-input-inline">
+            <input type="text" name="name" placeholder="请输入" autocomplete="off" class="layui-input"
+                   lay-verify="required">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">父级角色：</label>
+        <div class="layui-input-inline">
+            <input id="parentRole" name="pid">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">具体描述</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <textarea type="text" name="tips" lay-verify="required" autocomplete="off" class="layui-textarea">{{ d.params.tips || '' }}</textarea>
+            </script>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label"></label>
+        <div class="layui-input-inline">
+            <input type="button" lay-submit lay-filter="LAY-user-role-submit" value="确认" class="layui-btn">
+        </div>
+    </div>
+</div>
+
+<script>
+    layui.use(['admin', 'form'], function () {
+        var $ = layui.$
+            , form = layui.form;
+
+        //引入树形菜单
+        $('#parentRole').combotree({
+            url: '/role/treeData',
+            required: true,
+            // multiple: true,  //多选
+            // checkbox: true,  //多选框
+            lines: true,     //框线
+            dnd: true,        //能否拖动
+            queryParams: {"token": layui.data('localStorage').token}
+        });
+
+        setTimeout(function () {
+            form.render('select');
+        }, 100);
+    });
+</script>

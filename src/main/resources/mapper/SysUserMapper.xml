@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisher.fishspear.mapper.SysUserMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.fisher.fishspear.entity.SysUser">
+        <id column="id" property="id" />
+        <result column="avatar" property="avatar" />
+        <result column="nickname" property="nickname" />
+        <result column="username" property="username" />
+        <result column="phone" property="phone" />
+        <result column="wechat_id" property="wechatId" />
+        <result column="password" property="password" />
+        <result column="salt" property="salt" />
+        <result column="info" property="info" />
+        <result column="sex" property="sex" />
+        <result column="birth" property="birth" />
+        <result column="city_id" property="cityId" />
+        <result column="del" property="del" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, avatar, nickname, username, phone, wechat_id wechatId, password, salt, info, sex, birth, city_id cityId, del
+    </sql>
+
+    <!--列表条件分页查询-->
+    <select id="list" resultType="com.fisher.fishspear.entity.SysUser">
+        SELECT
+            id,
+            nickname,
+            username,
+            phone,
+            wechat_id wechatId,
+            del
+        from sys_user
+        <if test="username != null and username != ''">
+            where username like concat('%',#{username},'%')
+        </if>
+    </select>
+
+</mapper>

@@ -1,0 +1,108 @@
+<title>插件分类管理</title>
+
+<div class="layui-card layadmin-header">
+    <div class="layui-breadcrumb" lay-filter="breadcrumb">
+        <a lay-href="">业务管理</a>
+        <a>
+            <cite>插件分类管理</cite>
+        </a>
+    </div>
+</div>
+
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto" lay-filter="layadmin-categoryfront-formlist">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">插件分类名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="name" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn layuiadmin-btn-categoryadmin" lay-submit lay-filter="LAY-category-front-search">
+                        <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="layui-card-body">
+            <table id="LAY-category-manage" lay-filter="LAY-category-manage"></table>
+            <script type="text/html" id="table-categoryadmin-webcategory">
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>删除</a>
+            </script>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use(['admin', 'form', 'table', 'easyui'], function () {
+        var $ = layui.$
+            , admin = layui.admin
+            , view = layui.view
+            , table = layui.table
+            , form = layui.form
+            , setter = layui.setter;
+
+        //监听搜索
+        form.on('submit(LAY-category-front-search)', function (data) {
+            var field = data.field;
+            //执行重载
+            table.reload('LAY-category-manage', {
+                where: field,
+                page: {curr:1}
+            });
+        });
+
+        //用户管理
+        table.render({
+            elem: '#LAY-category-manage'
+            , headers: {
+                token: layui.data('localStorage').token
+            }
+            , url: '/category/list'
+            // , toolbar: '#test-table-toolbar-toolbarDemo'
+            , cols: [[
+                {type: 'checkbox', fixed: 'left'}
+                , {field: 'id', width: 100, title: 'ID', minWidth: 100}
+                , {field: 'pid', title: '父级id', width: 100}
+                , {field: 'name', title: '分类名', align: 'center', minWidth: 100}
+                , {field: 'chineseName', title: '中文', align: 'center', minWidth: 100}
+                , {title: '操作', minWidth: 150, align: 'center', fixed: 'right', toolbar: '#table-categoryadmin-webcategory'}
+            ]]
+            , request: {
+                pageName: 'current' //页码的参数名称，默认：page
+            }
+            , page: true
+            , height: 'full-320'
+            , text: {
+                none: '暂无数据'
+            }
+        });
+
+        //监听工具条
+        table.on('tool(LAY-category-manage)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                layer.confirm('确定删除' + data.name + '?', function (index) {
+                    del(data.id, data.del);
+                });
+            }
+        });
+
+        form.render(null, 'layadmin-categoryfront-formlist');
+
+        function del(id) {
+            admin.req({
+                url: '/category/del'
+                , type: 'post'
+                , data: {
+                    'categoryId': id
+                }
+                , success: function (res) {
+                    layer.msg("操作成功!");
+                    layui.table.reload('LAY-category-manage'); //重载表格
+                }
+            });
+        }
+    });
+</script>

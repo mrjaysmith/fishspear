@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisher.fishspear.mapper.BusAddonsMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.fisher.fishspear.entity.BusAddons">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="created" property="created" />
+        <result column="updated" property="updated" />
+        <result column="owner" property="owner" />
+        <result column="info" property="info" />
+        <result column="version" property="version" />
+        <result column="addons_version" property="addonsVersion" />
+        <result column="downloads" property="downloads" />
+        <result column="download_url" property="downloadUrl" />
+        <result column="latest" property="latest" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, `name`, created, updated, owner, info, version, addons_version addonsVersion, downloads, download_url downloadUrl, latest
+    </sql>
+
+    <select id="list" resultType="com.fisher.fishspear.entity.BusAddons">
+        select
+            <include refid="Base_Column_List"/>
+        from bus_addons
+        where 1 = 1
+        <if test="name != null and name != ''">
+            and `name` like concat('%',#{name},'%')
+        </if>
+    </select>
+
+</mapper>

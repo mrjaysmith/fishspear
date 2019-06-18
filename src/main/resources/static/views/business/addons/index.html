@@ -1,0 +1,169 @@
+<title>插件管理</title>
+
+<div class="layui-card layadmin-header">
+    <div class="layui-breadcrumb" lay-filter="breadcrumb">
+        <a lay-href="">业务管理</a>
+        <a>
+            <cite>插件管理</cite>
+        </a>
+    </div>
+</div>
+
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto" lay-filter="layadmin-addonsfront-formlist">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">插件名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="name" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn layuiadmin-btn-addonsadmin" lay-submit lay-filter="LAY-addons-front-search">
+                        <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="layui-card-body">
+            <div style="padding-bottom: 10px;">
+                <button class="layui-btn layuiadmin-btn-useradmin" data-type="add">添加</button>
+            </div>
+
+            <table id="LAY-addons-manage" lay-filter="LAY-addons-manage"></table>
+
+            <script type="text/html" id="latest">
+                {{# if(d.latest) {  }}
+                <span style="color: green;"><strong>最新</strong></span>
+                {{#  } else { }}
+                <span style="color: red;"><strong>旧版</strong></span>
+                {{# } }}
+            </script>
+
+            <script type="text/html" id="table-addonsadmin-webaddons">
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>删除</a>
+            </script>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use(['admin', 'form', 'table', 'easyui'], function () {
+        var $ = layui.$
+            , admin = layui.admin
+            , view = layui.view
+            , table = layui.table
+            , form = layui.form
+            , setter = layui.setter;
+
+        //监听搜索
+        form.on('submit(LAY-addons-front-search)', function (data) {
+            var field = data.field;
+            //执行重载
+            table.reload('LAY-addons-manage', {
+                where: field,
+                page: {curr:1}
+            });
+        });
+
+        //插件管理
+        table.render({
+            elem: '#LAY-addons-manage'
+            , headers: {
+                token: layui.data('localStorage').token
+            }
+            , url: '/addons/list'
+            // , toolbar: '#test-table-toolbar-toolbarDemo'
+            , cols: [[
+                {type: 'checkbox', fixed: 'left'}
+                , {field: 'id', width: 100, title: 'ID', hide: true}
+                , {field: 'name', title: '插件名', minWidth: 100}
+                , {field: 'created', title: '创建日期', align: 'center', minWidth: 100}
+                , {field: 'updated', title: '更新日期', align: 'center', minWidth: 100}
+                , {field: 'owner', title: '所有人', align: 'center', minWidth: 100}
+                , {field: 'version', title: '游戏版本', align: 'center', minWidth: 100}
+                , {field: 'addonsVersion', title: '插件版本', align: 'center', minWidth: 100}
+                , {field: 'downloads', title: '下载量', align: 'center', minWidth: 100}
+                , {field: 'latest', title: '最新', align: 'center', minWidth: 100, templet: '#latest'}
+                , {title: '操作', minWidth: 150, align: 'center', fixed: 'right', toolbar: '#table-addonsadmin-webaddons'}
+            ]]
+            , request: {
+                pageName: 'current' //页码的参数名称，默认：page
+            }
+            , page: true
+            , height: 'full-320'
+            , text: {
+                none: '暂无数据'
+            }
+        });
+
+        //事件
+        var active = {
+            add: function () {
+                admin.popup({
+                    title: '上传插件'
+                    , area: ['600px', '500px']
+                    , id: 'LAY-popup-addons-add'
+                    , success: function (layero, index) {
+                        view(this.id).render('business/addons/edit').done(function () {
+                            form.render(null, 'layuiadmin-form-addons');
+
+                            //监听提交
+                            form.on('submit(LAY-addons-front-submit)', function (data) {
+                                var field = data.field; //获取提交的字段
+                                console.log(field);
+                                //提交 Ajax 成功后，关闭当前弹层并重载表格
+                                admin.req({
+                                    url: '/addons/edit'
+                                    , data: field
+                                    , type: 'post'
+                                    ,success: function () {
+                                        layer.msg("跨服务上传，请3s后刷新页面");
+                                        layui.table.reload('addons-manage'); //重载表格
+                                    }
+                                });
+                                layer.close(index); //执行关闭
+                            });
+                        });
+                    }
+                });
+            }
+        };
+
+        //事件点击监听器
+        $('.layui-btn.layuiadmin-btn-useradmin').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+
+        //监听工具条
+        table.on('tool(LAY-addons-manage)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                if(data.latest) {
+                    layer.msg("最新版插件无法删除");
+                    return;
+                }
+                layer.confirm('确定删除' + data.name + '?', function (index) {
+                    del(data.id, data.del);
+                });
+            }
+        });
+
+        form.render(null, 'layadmin-addonsfront-formlist');
+
+        function del(id) {
+            admin.req({
+                url: '/addons/del'
+                , type: 'post'
+                , data: {
+                    'addonsId': id
+                }
+                , success: function (res) {
+                    layer.msg("操作成功!");
+                    layui.table.reload('LAY-addons-manage'); //重载表格
+                }
+            });
+        }
+    });
+</script>

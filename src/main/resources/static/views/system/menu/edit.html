@@ -1,0 +1,118 @@
+<link rel="stylesheet" type="text/css" href="../../../lib/extend/easyui.css">
+<style>
+    #menu-edit-poplayer .layui-form-label {
+        width: 120px;
+    }
+</style>
+
+<div id="menu-edit-poplayer" class="layui-form" lay-filter="layuiadmin-form-menu" style="padding: 20px 0 0 0;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">菜单名称</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <input type="text" name="name" value="{{ d.params.name || '' }}" lay-verify="required"
+                       placeholder="请输入菜单名称" autocomplete="off" class="layui-input">
+            </script>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">菜单编码</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <input type="text" name="code" value="{{ d.params.code || '' }}" lay-verify="required"
+                       placeholder="请输入菜单编码" autocomplete="off" class="layui-input">
+            </script>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">父级菜单</label>
+        <div class="layui-input-inline" >
+            <input id="menuTree" value="">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">url</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <input type="text" name="url" value="{{ d.params.url || '' }}" placeholder="请输入url"
+                       autocomplete="off" class="layui-input">
+            </script>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">icon</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <input type="text" name="icon" value="{{ d.params.icon || '' }}" placeholder="请输入icon" autocomplete="off" class="layui-input">
+            </script>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">序号</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <input type="number" name="sequence" value="{{ d.params.sequence || '' }}" placeholder="请输入序号"
+                       lay-verify="required|numberVal" autocomplete="off" class="layui-input">
+            </script>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">是否菜单</label>
+        <div class="layui-input-block">
+            <script type="text/html" template>
+                <input type="radio" name="sMenu" value="1" title="是" {{ d.params.smenu === true ? 'checked' : '' }}>
+                <input type="radio" name="sMenu" value="0" title="否" {{ d.params.smenu === false ? 'checked' : '' }}>
+            </script>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">菜单状态</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <input type="checkbox" lay-filter="switch" name="switch" {{ d.params.status === 1 ? 'checked' : '' }} lay-skin="switch" lay-text="启用|禁用">
+            </script>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">是否默认展开</label>
+        <div class="layui-input-block">
+            <script type="text/html" template>
+                <input type="radio" name="spread" value="1" title="是" {{ d.params.spread === 1 ? 'checked' : '' }}>
+                <input type="radio" name="spread" value="0" title="否" {{ d.params.spread === 0 ? 'checked' : '' }}>
+            </script>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label"></label>
+        <div class="layui-input-inline">
+            <input type="button" lay-submit lay-filter="LAY-user-front-submit" value="确认" class="layui-btn">
+        </div>
+    </div>
+</div>
+<script type="text/html" template>
+    <input type="text" id="id" value="{{ d.params.id || '' }}" style="display: none;">
+</script>
+<script type="text/html" template lay-done="layui.data.sendParams(d.params)">
+
+</script>
+<script>
+    layui.data.sendParams = function(params){
+        //若需用到 layui 组件，layui.use 需写在该全局方法里面，如：
+        layui.use(['admin', 'form', 'easyui'], function () {
+            var $ = layui.$, setter = layui.setter;
+
+            $('#menuTree').combotree({
+                url: '/menu/treeData',
+                required: true,
+                // multiple: true,      //多选
+                // checkbox: true,      //多选框
+                lines: true,            //框线
+                dnd: true,              //能否拖动
+                panelHeight: 'auto',      //高度自适应
+                queryParams: {"token": layui.data('localStorage').token}
+            });
+
+            $('#menuTree').combotree('setValue', params.pid);
+        })
+    };
+</script>

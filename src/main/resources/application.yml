@@ -1,0 +1,54 @@
+server:
+  port: 4466
+  file-upload-path: /home/fishspear/file
+#  file-upload-path: C:\Users\Public\Documents\DaringFiles\Files
+  file-upload-url: http://localhost:1111/file/upload
+
+spring:
+  #format time
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  resources:
+    static-locations: classpath:/static/
+
+  #上传文件大小限制
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+  #datasource
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/fishspear?autoReconnect=true&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+    name: fishspear
+
+  #druid
+    enable: true
+    initial-size: 1
+    async-init: true
+
+  #redis
+  redis:
+    database: 2
+    host: 127.0.0.1
+    port: 6379
+    password: 123456
+    jedis:
+      pool:
+        max-idle: 8
+        max-active: 8
+        min-idle: 0
+
+
+#mybatis-plus config
+mybatis-plus:
+  mapper-locations: classpath:/mapper/*Mapper.xml
+  type-aliases-package: com.fisher.fishspear.entity
+  global-config.id-type: 1
+  global-config.db-column-underline: true
+  global-config.capital-mode: true

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisher.fishspear.mapper.SysMenuMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.fisher.fishspear.entity.SysMenu">
+        <id column="id" property="id" />
+        <result column="pid" property="pid" />
+        <result column="pids" property="pids" />
+        <result column="code" property="code" />
+        <result column="pcode" property="pcode" />
+        <result column="name" property="name" />
+        <result column="icon" property="icon" />
+        <result column="url" property="url" />
+        <result column="sequence" property="sequence" />
+        <result column="is_menu" property="isMenu" />
+        <result column="status" property="status" />
+        <result column="is_open" property="isOpen" />
+        <result column="del" property="del" />
+        <result column="outside" property="outside" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, pid, pids, code, pcode, name, icon, url, sequence, is_menu, status, is_open, del, outside
+    </sql>
+
+    <select id="menus" resultType="java.lang.String">
+        select
+            code
+        from sys_menu m
+        left join sys_role_menu r
+        on m.id = r.menu_id
+        where r.role_id = #{roleId}
+    </select>
+
+    <select id="getMenus" resultType="com.fisher.fishspear.entity.SysMenu">
+        select m.*
+        from sys_user u right join sys_user_role ur on u.id = ur.user_id
+        right join  sys_role r on ur.role_id = r.id
+        right join sys_role_menu rm on r.id = rm.role_id
+        right join sys_menu m on rm.menu_id = m.id
+        where u.id = ${userId}
+    </select>
+
+    <select id="getMenusByRoleId" resultType="com.fisher.fishspear.entity.SysMenu">
+        select m.*
+        from sys_role r right join sys_role_menu rm on r.id = rm.role_id
+        right join sys_menu m on rm.menu_id = m.id
+        where r.id = ${roleId}
+    </select>
+
+    <select id="selectTreeMenus" resultType="com.fisher.fishspear.model.TreeNode">
+        SELECT
+        m1.id,
+        m2.id as pid,
+        m1.CODE as name,
+        m1.NAME as title,
+        m1.NAME as text,
+        m1.icon,
+        m1.url as jump,
+        m1.sequence,
+        m1.is_open as spread,
+        m1.is_open as state
+        FROM sys_menu m1
+        LEFT JOIN sys_menu m2
+        ON m1.pcode = m2.CODE
+        WHERE m1.STATUS = 1
+        AND m1.del = 1
+        AND m1.is_menu = 1
+        <if test="flag == 0">
+            AND m1.outside = 1
+        </if>
+        order by sequence
+    </select>
+
+    <!--后台查询菜单列表-->
+    <select id="selectByCondition" resultType="com.fisher.fishspear.entity.SysMenu">
+        select <include refid="Base_Column_List"/> from sys_menu
+        where del = 1
+        <if test="name != null and name != ''">
+            and name like concat('%', #{name}, '%')
+        </if>
+        <if test="code != null and code != ''">
+            and code like concat('%', #{code}, '%')
+        </if>
+        <if test="url != null and url != ''">
+            and url like concat('%', #{url}, '%')
+        </if>
+        order by id
+    </select>
+
+    <!--获取角色所有菜单-->
+    <select id="getAdminMenus" resultType="com.fisher.fishspear.entity.SysMenu">
+        select m.*
+        from sys_menu m
+        left join sys_role_menu r
+        on m.id = r.menu_id
+        where r.role_id = #{roleId}
+    </select>
+
+</mapper>

@@ -1,0 +1,257 @@
+<title>菜单管理</title>
+
+<div class="layui-card layadmin-header">
+    <div class="layui-breadcrumb" lay-filter="breadcrumb">
+        <a>系统管理</a>
+        <a>
+            <cite>菜单管理</cite>
+        </a>
+    </div>
+</div>
+
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto" lay-filter="layadmin-menu-formlist">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">菜单名称：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="name" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">菜单编码：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="code" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">url：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="url" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn layuiadmin-btn-useradmin" lay-submit lay-filter="menu-search">
+                        <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="layui-card-body">
+            <div style="padding-bottom: 10px;">
+                <button class="layui-btn layuiadmin-btn-useradmin" data-type="add">添加</button>
+                <button class="layui-btn layuiadmin-btn-useradmin" data-type="batchdel">删除</button>
+            </div>
+
+            <table id="menu-manage" lay-filter="menu-manage"></table>
+
+            <!--<script type="text/html" id="toolbar">-->
+            <!--</script>-->
+
+            <!--<script type="text/html" id="imgTpl">-->
+                <!--<img style="display: inline-block; width: 50%; height: 100%;" src={{ d.avatar }}>-->
+            <!--</script>-->
+            <script type="text/html" id="table-menu">
+                <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit"><i
+                        class="layui-icon layui-icon-edit"></i>编辑
+                </a>
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i
+                        class="layui-icon layui-icon-delete"></i>删除
+                </a>
+            </script>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use(['table', 'admin', 'form', 'easyui'], function () {
+        var $ = layui.$
+            , admin = layui.admin
+            , view = layui.view
+            , table = layui.table
+            , form = layui.form;
+
+        //菜单管理
+        table.render({
+            elem: '#menu-manage'
+            , url: '/menu/list'
+            , headers: {
+                token: layui.data('localStorage').token
+            }
+            // , toolbar: '#toolbar'
+            , cols: [[
+                {type: 'checkbox', fixed: 'left'}
+                , {field: 'name', title: '菜单名称', minWidth: 100}
+                , {field: 'code', title: '菜单编码', width: 100}
+                , {field: 'url', title: 'url'}
+                , {field: 'icon', title: 'icon'}
+                , {title: '操作', minWidth: 150, align: 'center', fixed: 'right', toolbar: '#table-menu'}
+            ]]
+            , page: true
+            , height: 'full-320'
+            , request: {
+                pageName: 'current' //页码的参数名称，默认：page
+            }
+            , text: {none: '暂无数据'}
+        });
+
+        //监听工具条
+        table.on('tool(menu-manage)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                var ids = [];
+                ids.push(data.id);
+                layer.confirm('子菜单会一并删除，确定删除吗？', function (index) {
+                    //提交数据
+                    admin.req({
+                        url: '/menu/delBatch'
+                        , type: 'post'
+                        , data: {
+                            ids: JSON.stringify(ids)
+                        }
+                        ,success: function () {
+                            //刷新整页
+                            // table.reload('menu-manage');
+                            window.location.reload();
+                            layer.msg('删除成功!');
+                            layer.close(index);
+                        }
+                    });
+                });
+            } else if (obj.event === 'edit') {
+                admin.popup({
+                    title: '编辑菜单'
+                    , area: ['500px', '600px']
+                    , id: 'LAY-popup-user-add'
+                    , success: function (layero, index) {
+                        view(this.id).render('system/menu/edit', data).done(function () {
+                            form.render(null, 'layuiadmin-form-menu');
+
+                            //监听提交
+                            form.on('submit(LAY-user-front-submit)', function (data) {
+                                var field = data.field; //获取提交的字段
+                                //获取树对象
+                                var t = $('#menuTree').combotree('tree');
+                                //获取选择节点
+                                var p = t.tree('getSelected');
+                                if (p) {
+                                    field.pid = p.id;
+                                    field.pcode = p.name;
+                                }
+                                //id
+                                field.id = $('#id').val();
+                                //菜单状态,是否启用
+                                field.status = field.switch === "on" ? 1 : 0;
+                                //提交数据
+                                admin.req({
+                                    url: '/menu/edit'
+                                    , type: 'post'
+                                    , data: field
+                                    ,success: function () {
+                                        table.reload('menu-manage');
+                                        layer.msg('已保存');
+                                        layer.close(index);
+                                    }
+                                });
+                            });
+                        });
+                    }
+                });
+            }
+        });
+
+        form.render(null, 'layadmin-menu-formlist');
+
+        //监听搜索
+        form.on('submit(menu-search)', function (data) {
+            var params = data.field;
+            //执行重载
+            table.reload('menu-manage', {
+                where: params,
+                page: {curr:1}
+            });
+        });
+
+        //事件
+        var active = {
+            batchdel: function () {
+                var checkStatus = table.checkStatus('menu-manage')
+                    , checkData = checkStatus.data; //得到选中的数据
+
+                if (checkData.length === 0) {
+                    return layer.msg('请选择数据');
+                } else {
+                    layer.confirm('子菜单会一并删除，确定删除吗？', function (index) {
+                        var ids = [];
+                        checkData.forEach(function(v, i){
+                            ids.push(v.id);
+                        });
+                        //执行 Ajax 后重载
+                        admin.req({
+                            url: '/menu/delBatch'
+                            , type: 'post'
+                            , data: {
+                                ids: JSON.stringify(ids)
+                            }
+                            ,success: function () {
+                                // table.reload('menu-manage');
+                                window.location.reload();
+                                layer.msg('已删除');
+                                layer.close(index);
+                            }
+                        });
+                    });
+                }
+                // layer.prompt({
+                //     formType: 1
+                //     , title: '敏感操作，请验证口令'
+                // }, function (value, index) {
+                //
+                // });
+            }
+            , add: function () {
+                admin.popup({
+                    title: '添加菜单'
+                    , area: ['500px', '600px']
+                    , id: 'LAY-popup-user-add'
+                    , success: function (layero, index) {
+                        view(this.id).render('system/menu/edit').done(function () {
+                            form.render(null, 'layuiadmin-form-menu');
+
+                            //监听提交
+                            form.on('submit(LAY-user-front-submit)', function (data) {
+                                var field = data.field; //获取提交的字段
+                                //菜单状态,是否启用
+                                field.status = field.switch === "on" ? 1 : 0;
+                                //获取树对象
+                                var t = $('#menuTree').combotree('tree');
+                                //获取选择节点
+                                var p = t.tree('getSelected');
+                                if (p) {
+                                    field.pcode = p.name;
+                                    field.pid = p.id;
+                                }
+                                console.log(field);
+                                //提交 Ajax 成功后，关闭当前弹层并重载表格
+                                admin.req({
+                                    url: '/menu/edit'
+                                    , data: field
+                                    , type: 'post'
+                                    ,success: function () {
+                                        layui.table.reload('menu-manage'); //重载表格
+                                    }
+                                });
+                                layer.close(index); //执行关闭
+                            });
+                        });
+                    }
+                });
+            }
+        };
+
+        $('.layui-btn.layuiadmin-btn-useradmin').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+    });
+</script>

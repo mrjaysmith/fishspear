@@ -1,0 +1,72 @@
+<link rel="stylesheet" type="text/css" href="../../../lib/extend/easyui.css">
+<div class="layui-form" lay-filter="layui-form-role" style="padding: 20px 30px 0 0;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">角色名称：</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <input type="text" name="name" autocomplete="off" class="layui-input"
+                       value="{{ d.params.name || '' }}"
+                       lay-verify="required|valueLength">
+            </script>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">父级角色：</label>
+        <div class="layui-input-inline">
+            <input id="parentRoleEdit" name="pid" style="width: 190px;!important;">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">具体描述</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <textarea type="text" name="tips" lay-verify="required|valueLength" autocomplete="off"
+                          class="layui-textarea">{{ d.params.tips || '' }}</textarea>
+            </script>
+        </div>
+    </div>
+
+    <!--隐藏字段-->
+    <script type="text/html" template>
+        <input name="id" value="{{ d.params.id || ''}}" hidden>
+    </script>
+
+    <script type="text/html" template>
+        <input name="pid" value="{{ d.params.pid || ''}}" hidden>
+    </script>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label"></label>
+        <div class="layui-input-inline">
+            <input type="button" lay-submit lay-filter="LAY-user-role-edit-submit" value="确认" class="layui-btn">
+        </div>
+    </div>
+</div>
+<script type="text/html" template lay-done="layui.data.sendParams(d.params)">
+</script>
+<script>
+    layui.data.sendParams = function (params) {
+        layui.use(['admin', 'form', 'easyui'], function () {
+            var $ = layui.$, form = layui.form;
+
+            //引入树形菜单
+            $('#parentRoleEdit').combotree({
+                url: '/role/treeData',
+                required: true,
+                // multiple: true,  //多选
+                // checkbox: true,  //多选框
+                lines: true,     //框线
+                dnd: true,        //能否拖动
+                queryParams: {"token": layui.data('localStorage').token}
+            });
+
+            if (params.pid != 1) {
+                $('#parentRoleEdit').combotree('setValue', params.pid);
+            }
+
+            setTimeout(function () {
+                form.render('select');
+            }, 100);
+        })
+    };
+</script>

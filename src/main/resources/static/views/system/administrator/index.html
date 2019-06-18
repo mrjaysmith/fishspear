@@ -1,0 +1,246 @@
+<title>管理员管理</title>
+
+<div class="layui-card layadmin-header">
+    <div class="layui-breadcrumb" lay-filter="breadcrumb">
+        <a lay-href="">系统管理</a>
+        <a>
+            <cite>管理员管理</cite>
+        </a>
+    </div>
+</div>
+
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto" lay-filter="layadmin-userfront-formlist">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">用户名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="username" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn layuiadmin-btn-useradmin" lay-submit lay-filter="LAY-user-front-search">
+                        <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="layui-card-body">
+            <div style="padding-bottom: 10px;">
+                <button class="layui-btn layuiadmin-btn-useradmin" data-type="add">添加</button>
+            </div>
+            <table id="LAY-user-manage" lay-filter="LAY-user-manage"></table>
+
+            <script type="text/html" id="del">
+                {{# if(d.del) {  }}
+                <span style="color: red;"><strong>已禁用</strong></span>
+                {{#  } else { }}
+                <span style="color: green;"><strong>可用</strong></span>
+                {{# } }}
+            </script>
+
+            <script type="text/html" id="imgTpl">
+                <img style="display: inline-block; width: 50%; height: 100%;" src={{ d.avatar }}>
+            </script>
+            <script type="text/html" id="table-useradmin-webuser">
+                <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>编辑</a>
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>禁用</a>
+                <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="reset"><i class="layui-icon layui-icon-edit"></i>重置密码</a>
+            </script>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use(['admin', 'form', 'table', 'easyui'], function () {
+        var $ = layui.$
+            , admin = layui.admin
+            , view = layui.view
+            , table = layui.table
+            , form = layui.form
+            , setter = layui.setter;
+
+        var cols = [
+            {type: 'checkbox', fixed: 'left'}
+            , {field: 'id', width: 100, title: 'ID', hide: true}
+            , {field: 'username', title: '用户名', align: 'center', minWidth: 100}
+            , {field: 'phone', title: '手机号', align: 'center', minWidth: 100}
+            , {field: 'roleId', width: 80, title: '角色Id', hide: true}
+            , {field: 'role', width: 150, align: 'center', title: '角色'}
+            , {field: 'del', title: '状态', align: 'center', templet: '#del'}
+            , {title: '操作', minWidth: 150, align: 'center', fixed: 'right', toolbar: '#table-useradmin-webuser'}
+        ];
+
+
+        //管理员管理
+        table.render({
+            elem: '#LAY-user-manage'
+            , headers: {
+                token: layui.data('localStorage').token
+            }
+            , url: '/admin/list'
+            // , toolbar: '#test-table-toolbar-toolbarDemo'
+            , cols: [cols]
+            ,request: {
+                pageName: 'current' //页码的参数名称，默认：page
+            }
+            , page: true
+            , height: 'full-320'
+            , text: {
+                none: '暂无数据'
+            }
+        });
+
+        //监听工具条
+        table.on('tool(LAY-user-manage)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'edit') {
+                admin.popup({
+                    title: '编辑管理员'
+                    , area: ['500px', '450px']
+                    , id: 'LAY-popup-user-add'
+                    , shadeClose: false
+                    , success: function (layero, index) {
+                        view(this.id).render('system/administrator/edit', data).done(function () {
+                            $('#username').remove();
+                            $('#password').remove();
+                            form.render(null, 'layuiadmin-form-useradmin');
+
+                            //监听提交
+                            form.on('submit(LAY-user-useradmin-submit)', function (data) {
+                                submit(data, index);
+                            });
+                        });
+                    }
+                });
+            } else if (obj.event === 'del') {
+                layer.confirm('确定禁用'+ data.username + '?', function (index) {
+                    //提交数据
+                    admin.req({
+                        url: '/admin/del'
+                        , type: 'post'
+                        , data: {
+                            adminId: data.id
+                        }
+                        ,success: function () {
+                            table.reload('LAY-user-manage');
+                            layer.msg('操作成功!');
+                            layer.close(index);
+                        }
+                    });
+                });
+            } else if (obj.event === 'reset') {
+                layer.confirm('确定重置' + data.username + '的密码为111111?', function (index) {
+                    //执行 Ajax 后重载
+                    admin.req({
+                        url: '/admin/resetPassword'
+                        , type: 'post'
+                        , data: {
+                            'adminId': data.id
+                        }
+                        , done: function (data) {
+                            table.reload('LAY-user-manage');
+                            layer.msg('已重置');
+                        }
+                    });
+                });
+            }
+        });
+
+        //提交数据
+        function submit(data, index) {
+            var field = data.field; //获取提交的字段
+            field.id = $('#id').val();
+
+            //获取树对象
+            var roleTree = $('#roleTree').combotree('tree');
+            //获取选择节点
+
+            var p2 = roleTree.tree('getSelected');
+
+            //角色
+            if (p2) {
+                field.roleId = p2.id;
+            } else {
+                layer.msg('角色不能为空!', {icon: 2});
+                $('#roleTree').focus();
+                return;
+            }
+
+            admin.req({
+                url: '/admin/edit'
+                ,data: field
+                ,type: 'post'
+                ,success: function(res){
+                    layui.table.reload('LAY-user-manage'); //重载表格
+                }
+            });
+            layer.close(index); //执行关闭
+        }
+
+        form.render(null, 'layadmin-userfront-formlist');
+
+        //监听搜索
+        form.on('submit(LAY-user-front-search)', function (data) {
+            var field = data.field;
+            //执行重载
+            table.reload('LAY-user-manage', {
+                where: field,
+                page: {curr:1}
+            });
+        });
+
+
+        var active = {
+            //重置密码
+            batchResetPass: function () {
+                var checkStatus = table.checkStatus('LAY-user-manage')
+                    , checkData = checkStatus.data; //得到选中的数据
+
+                if (checkData.length === 0) {
+                    return layer.msg('请选择数据');
+                }
+                layer.confirm('确定重置密码为111111吗？', function (index) {
+                    var ids = [];
+                    checkData.forEach(function(v, i){
+                        ids.push(v.id);
+                    });
+                    //执行 Ajax 后重载
+                    admin.req({
+                      url: '/admin/resetPassword'
+                      ,type: 'post'
+                      ,data: {
+                          ids: JSON.stringify(ids)
+                        }
+                        ,done: function (data) {
+                            table.reload('LAY-user-manage');
+                            layer.msg('已重置');
+                        }
+                    });
+
+                })
+            }, add: function () {
+                admin.popup({
+                    title: '添加管理员'
+                    , area: ['500px', '450px']
+                    , id: 'LAY-popup-user-add'
+                    , success: function (layero, index) {
+                        view(this.id).render('system/administrator/edit').done(function () {
+                            form.render(null, 'layuiadmin-form-useradmin');
+
+                            //监听提交
+                            form.on('submit(LAY-user-useradmin-submit)', function (data) {
+                                submit(data, index);
+                            });
+                        });
+                    }
+                });
+            }
+        };
+
+        $('.layui-btn.layuiadmin-btn-useradmin').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+    });
+</script>

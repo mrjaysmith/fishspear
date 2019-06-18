@@ -1,0 +1,19 @@
+<link rel="stylesheet" type="text/css" href="../../../lib/extend/easyui.css">
+<div class="layui-form" lay-filter="layui-form-role-menu" style="padding: 20px 30px 0 0;">
+    <div class="layui-form-item">
+        <input id="roleMenuTree" name="menu" value="">
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label"></label>
+        <div class="layui-input-inline">
+            <input type="button" lay-submit lay-filter="LAY-role-menu-submit" value="确认" class="layui-btn">
+        </div>
+    </div>
+</div>
+
+<script>
+    layui.use(['admin', 'form', 'easyui'], function () {
+        var $ = layui.$, setter = layui.setter;
+    });
+</script>

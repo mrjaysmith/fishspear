@@ -1,0 +1,87 @@
+<div id="addons-edit-poplayer" class="layui-form" lay-filter="layuiadmin-form-addons"
+     style="padding: 20px 0 0 0;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">插件名称</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <input type="text" name="name" value="{{ d.params.name || '' }}" lay-verify="required"
+                       placeholder="请输入插件名称" autocomplete="off" class="layui-input">
+            </script>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">插件版本</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <input type="text" name="addonsVersion" value="{{ d.params.addonsVersion || '' }}" lay-verify="required"
+                       placeholder="请输入插件版本" autocomplete="off" class="layui-input">
+            </script>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">对应游戏版本</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <input type="text" name="version" value="{{ d.params.version || '' }}" lay-verify="required"
+                       placeholder="请输入对应游戏版本" autocomplete="off" class="layui-input">
+            </script>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">插件资源文件</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <input type="text" name="downloadUrl" value="{{ d.params.downloadUrl || '' }}" lay-verify="required"
+                       placeholder="请上传文件" autocomplete="off" class="layui-input" style="width: 200px; margin-right: 0;"
+                       readonly>
+            </script>
+        </div>
+        <button style="float: left;" type="button" class="layui-btn" id="upload-addons">上传</button>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">所属分类(多选树状图待完善)</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <input type="text" name="categoryIds" value="{{ d.params.categoryIds || '' }}" lay-verify="required"
+                       placeholder="请输入对应游戏版本" autocomplete="off" class="layui-input">
+            </script>
+        </div>
+    </div>
+    <!--隐藏字段-->
+    <script type="text/html" template>
+        <input name="id" value="{{ d.params.id || ''}}" hidden>
+    </script>
+    <div class="layui-form-item">
+        <label class="layui-form-label"></label>
+        <div class="layui-input-inline">
+            <input type="button" lay-submit lay-filter="LAY-addons-front-submit" value="确认" class="layui-btn">
+        </div>
+    </div>
+</div>
+
+<script type="text/html" template>
+    <input type="text" id="id" value="{{ d.params.id || '' }}" style="display: none;">
+</script>
+<script type="text/html" template lay-done="layui.data.sendParams(d.params)">
+
+</script>
+<script>
+    layui.data.sendParams = function (params) {
+        layui.use(['admin', 'form', 'upload'], function () {
+            var $ = layui.$,
+                upload = layui.upload,
+                form = layui.form;
+
+            //上传文件
+            upload.render({
+                elem: '#upload-addons'
+                , url: '/file/upload'
+                , accept: 'images'
+                , method: 'post'
+                , done: function (res) {
+                    $(this.item).prev("div").children("input").val(res.data)
+                }
+            });
+        });
+    };
+</script>

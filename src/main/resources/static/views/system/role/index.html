@@ -1,0 +1,218 @@
+<link rel="stylesheet" type="text/css" href="../../../lib/extend/easyui.css">
+<title>角色管理</title>
+
+<div class="layui-card layadmin-header">
+    <div class="layui-breadcrumb" lay-filter="breadcrumb">
+        <a lay-href="">系统管理</a>
+        <a>
+            <cite>角色管理</cite>
+        </a>
+    </div>
+</div>
+
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div style="padding-bottom: 10px;">
+                <button class="layui-btn layuiadmin-btn-role" data-type="add">添加</button>
+            </div>
+
+            <table id="LAY-user-back-role" lay-filter="LAY-user-back-role"></table>
+            <script type="text/html" id="table-userrole-admin">
+                <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit"><i
+                        class="layui-icon layui-icon-edit"></i>编辑</a>
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i
+                        class="layui-icon layui-icon-delete"></i>删除</a>
+                <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="rolemenu"><i
+                        class="layui-icon layui-icon-edit"></i>分配权限</a>
+            </script>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use('useradmin', layui.factory('useradmin')).use(['admin', 'useradmin', 'table', 'easyui'], function () {
+        var $ = layui.$
+            , admin = layui.admin
+            , view = layui.view
+            , table = layui.table
+            , setter = layui.setter
+            , form = layui.form;
+
+        //角色管理
+        table.render({
+            elem: '#LAY-user-back-role'
+            , url: '/role/list'
+            , headers: {
+                token: layui.data('localStorage').token
+            }
+            // , toolbar: 'default'
+            , cols: [[
+                {type: 'checkbox', fixed: 'left'}
+                , {field: 'id', width: 80, title: 'ID', sort: true, hide: true}
+                , {field: 'name', title: '角色名'}
+                , {field: 'tips', title: '具体描述'}
+                , {fixed: 'right', title: '操作', minWidth: 150, toolbar: '#table-userrole-admin', width: 250}
+            ]]
+            , page: true
+            , height: 'full-320'
+            , request: {
+                pageName: 'current' //页码的参数名称，默认：page
+            }
+            , text: {none: '暂无数据'}
+        });
+
+        //监听工具条
+        table.on('tool(LAY-user-back-role)', function (obj) {
+            var data = obj.data;
+            var ids = [];
+            ids.push(data.id);
+            if (obj.event === 'del') {
+                if (data.id == 1) {
+                    layer.msg('超级管理员不能删除', {icon: 2});
+                    return;
+                }
+                layer.confirm('确定删除此角色？', function (index) {
+                    admin.req({
+                        url: '/role/del'
+                        , data: {
+                            del: JSON.stringify(ids)
+                        }
+                        , success: function () {
+                            layui.table.reload('LAY-user-back-role'); //重载表格
+                        }
+                    });
+                    layer.close(index);
+                });
+            } else if (obj.event === 'edit') {
+                if (data.id == 1) {
+                    layer.msg('超级管理员不能编辑', {icon: 2});
+                    return;
+                }
+                admin.popup({
+                    title: '编辑角色'
+                    , area: ['500px', '480px']
+                    , id: 'LAY-popup-user-edit'
+                    , success: function (layero, index) {
+
+                        view(this.id).render('system/role/edit', data).done(function () {
+                            form.render(null, 'layuiadmin-form-role');
+
+                            //监听提交
+                            form.on('submit(LAY-user-role-edit-submit)', function (data) {
+                                var field = data.field; //获取提交的字段
+                                //获取树
+                                var roleTree = $('#parentRoleEdit').combotree('tree');
+
+                                var p = roleTree.tree('getSelected');
+                                if (p) {
+                                    field.pid = p.id;
+                                }
+                                if (!field.pid) {
+                                    layer.msg('请选择父级角色', {icon: 2});
+                                    return;
+                                }
+                                submit(field, index);
+
+                            });
+                        });
+                    }
+                });
+            } else if (obj.event === 'rolemenu') {
+                admin.popup({
+                    title: '分配权限'
+                    , area: ['300px', '300px']
+                    , id: 'LAY-popup-role-menu'
+                    , success: function (layero, index) {
+                        view(this.id).render('system/role/rolemenuform').done(function () {
+                            form.render(null, 'layui-form-role-menu');
+                            //引入树形菜单
+                            $('#roleMenuTree').combotree({
+                                url: '/menu/roleMenu?roleId=' + data.id,
+                                required: true,
+                                multiple: true,
+                                checkbox: true,
+                                lines: true,
+                                queryParams: {"token": layui.data('localStorage').token}
+                            });
+
+                            //监听提交
+                            form.on('submit(LAY-role-menu-submit)', function () {
+                                var list = $('#roleMenuTree').combotree('tree').tree('getChecked');
+                                admin.req({
+                                    url: '/role/rolemenu'
+                                    , data: {
+                                        roleId: data.id
+                                        , menuIds: function () {
+                                            var ids = new Array();
+                                            for (var i = 0; i < list.length; i++) {
+                                                ids[i] = list[i].id;
+                                            }
+                                            return ids;
+                                        }
+                                    }
+                                    , success: function () {
+                                        layui.table.reload('LAY-user-back-role'); //重载表格
+                                    }
+                                });
+                                //提交 Ajax 成功后，关闭当前弹层并重载表格
+                                layer.close(index); //执行关闭
+                            });
+                        });
+                    }
+                });
+            }
+        });
+
+        form.render(null, 'layadmin-userrole-formlist');
+
+        //提交数据
+        function submit(data, index) {
+            admin.req({
+                url: '/role/add'
+                , data: data
+                , success: function () {
+                    layui.table.reload('LAY-user-back-role'); //重载表格
+                }
+            });
+            //提交 Ajax 成功后，关闭当前弹层并重载表格
+            layer.close(index); //执行关闭
+        }
+
+        //事件
+        var active = {
+             add: function () {
+                admin.popup({
+                    title: '添加新角色'
+                    , area: ['500px', '480px']
+                    , id: 'LAY-popup-user-add'
+                    , success: function (layero, index) {
+                        view(this.id).render('system/role/edit').done(function () {
+                            form.render(null, 'layuiadmin-form-role');
+
+                            //监听提交
+                            form.on('submit(LAY-user-role-edit-submit)', function (data) {
+                                //获取树
+                                var roleTree = $('#parentRoleEdit').combotree('tree');
+
+                                var p = roleTree.tree('getSelected');
+                                if (p) {
+                                    data.field.pid = p.id;
+                                }
+                                if (!data.field.pid) {
+                                    layer.msg('请选择父级角色', {icon: 2});
+                                    return;
+                                }
+                                submit(data.field, index);
+                            });
+                        });
+                    }
+                });
+            }
+        };
+
+        $('.layui-btn.layuiadmin-btn-role').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+    });
+</script>

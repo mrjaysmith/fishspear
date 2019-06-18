@@ -1,0 +1,84 @@
+<link rel="stylesheet" type="text/css" href="../../../lib/extend/easyui.css">
+<style>
+    #dept-edit-poplayer .layui-form-label {
+        width: 120px;
+    }
+</style>
+
+<div id="dept-edit-poplayer" class="layui-form" lay-filter="layuiadmin-form-useradmin" style="padding: 20px 0 0 0;">
+    <div class="layui-form-item" id="username" >
+        <label class="layui-form-label">用户名</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <input type="text" name="" value="{{ d.params.userName || '' }}" lay-verify="required|valueLength"
+                       placeholder="请输入用户名" autocomplete="off" class="layui-input">
+            </script>
+        </div>
+    </div>
+    <div class="layui-form-item" id="password" >
+        <label class="layui-form-label">密码</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <input type="text" name="password" lay-verify="required|password"
+                       placeholder="请输入初始密码" autocomplete="off" class="layui-input">usernameusername
+            </script>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">手机号</label>
+        <div class="layui-input-inline">
+            <script type="text/html" template>
+                <input type="text" name="phone" value="{{ d.params.phone || '' }}" lay-verify="phone"
+                       placeholder="请输入手机号" autocomplete="off" class="layui-input">
+            </script>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">角色</label>
+        <div class="layui-input-inline" >
+            <input id="roleTree" value="">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label"></label>
+        <div class="layui-input-inline">
+            <input type="button" lay-submit lay-filter="LAY-user-useradmin-submit" value="确认" class="layui-btn">
+        </div>
+    </div>
+</div>
+<script type="text/html" template>
+    <input type="text" name="id" id="id" value="{{ d.params.id || '' }}" style="display: none;">
+</script>
+<script type="text/html" template lay-done="layui.data.sendParams(d.params)">
+
+</script>
+<script>
+    layui.data.sendParams = function(params){
+        //若需用到 layui 组件，layui.use 需写在该全局方法里面，如：
+        layui.use(['admin', 'form', 'easyui'], function () {
+            var $ = layui.$, setter = layui.setter, form = layui.form;
+
+            //角色树
+            $('#roleTree').combotree({
+                url: '/role/treeData',
+                required: true,
+                // multiple: true,  //多选
+                // checkbox: true,  //多选框
+                lines: true,        //框线
+                dnd: true,          //能否拖动
+                panelHeight: 'auto',  //高度自适应
+                queryParams: {"token": layui.data('localStorage').token, "type": 0}
+            });
+
+            $('#roleTree').combotree('setValue', params.roleId);
+            
+            form.verify({
+                password: function (value, item) {
+                    if (value.length < 6 || value.length > 20) {
+                        return "密码长度为6-20位";
+                    }
+                }
+            });
+        })
+    };
+</script>

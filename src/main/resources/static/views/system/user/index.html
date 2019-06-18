@@ -1,0 +1,141 @@
+<title>用户管理</title>
+
+<div class="layui-card layadmin-header">
+    <div class="layui-breadcrumb" lay-filter="breadcrumb">
+        <a lay-href="">系统管理</a>
+        <a>
+            <cite>用户管理</cite>
+        </a>
+    </div>
+</div>
+
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto" lay-filter="layadmin-userfront-formlist">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">用户名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="username" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn layuiadmin-btn-useradmin" lay-submit lay-filter="LAY-user-front-search">
+                        <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="layui-card-body">
+            <table id="LAY-user-manage" lay-filter="LAY-user-manage"></table>
+
+            <script type="text/html" id="del">
+                {{# if(d.del) {  }}
+                <span style="color: red;"><strong>已禁用</strong></span>
+                {{#  } else { }}
+                <span style="color: green;"><strong>可用</strong></span>
+                {{# } }}
+            </script>
+
+            <script type="text/html" id="table-useradmin-webuser">
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>禁用</a>
+                <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="reset"><i class="layui-icon layui-icon-edit"></i>重置密码</a>
+            </script>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use(['admin', 'form', 'table', 'easyui'], function () {
+        var $ = layui.$
+            , admin = layui.admin
+            , view = layui.view
+            , table = layui.table
+            , form = layui.form
+            , setter = layui.setter;
+
+        //监听搜索
+        form.on('submit(LAY-user-front-search)', function (data) {
+            var field = data.field;
+            //执行重载
+            table.reload('LAY-user-manage', {
+                where: field,
+                page: {curr:1}
+            });
+        });
+
+        //用户管理
+        table.render({
+            elem: '#LAY-user-manage'
+            , headers: {
+                token: layui.data('localStorage').token
+            }
+            , url: '/user/list'
+            // , toolbar: '#test-table-toolbar-toolbarDemo'
+            , cols: [[
+                {type: 'checkbox', fixed: 'left'}
+                , {field: 'id', width: 100, title: 'ID', hide: true}
+                , {field: 'nickname', title: '昵称', minWidth: 100}
+                , {field: 'username', title: '用户名', align: 'center', minWidth: 100}
+                , {field: 'phone', title: '手机号', align: 'center', minWidth: 100}
+                , {field: 'wechatId', title: '微信号', align: 'center', minWidth: 100}
+                , {field: 'del', title: '状态', align: 'center', templet: '#del'}
+                , {title: '操作', minWidth: 150, align: 'center', fixed: 'right', toolbar: '#table-useradmin-webuser'}
+            ]]
+            , request: {
+                pageName: 'current' //页码的参数名称，默认：page
+            }
+            , page: true
+            , height: 'full-320'
+            , text: {
+                none: '暂无数据'
+            }
+        });
+
+        //监听工具条
+        table.on('tool(LAY-user-manage)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                layer.confirm('确定禁用' + data.username + '?', function (index) {
+                    del(data.id, data.del);
+                });
+            } else if (obj.event === 'reset') {
+                layer.confirm('确定重置' + data.username + '的密码为111111?', function (index) {
+                    reset(data.id);
+                });
+            }
+        });
+
+        form.render(null, 'layadmin-userfront-formlist');
+
+        function del(id) {
+            admin.req({
+                url: '/user/del'
+                , type: 'post'
+                , data: {
+                    'userId': id
+
+                }
+                , success: function (res) {
+                    layer.msg("操作成功!");
+                    layui.table.reload('LAY-user-manage'); //重载表格
+                }
+            });
+        }
+
+        function reset(id) {
+            //执行 Ajax 后重载
+            admin.req({
+                url: '/user/resetPassword'
+                , type: 'post'
+                , data: {
+                    'userId': id
+                }
+                , done: function (data) {
+                    table.reload('LAY-user-manage');
+                    layer.msg('已重置');
+                }
+            });
+        }
+
+    });
+</script>

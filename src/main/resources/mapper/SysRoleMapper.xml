@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisher.fishspear.mapper.SysRoleMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.fisher.fishspear.entity.SysRole">
+        <id column="id" property="id"/>
+        <result column="pid" property="pid"/>
+        <result column="name" property="name"/>
+        <result column="tips" property="tips"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, pid, `name`, tips
+    </sql>
+
+    <select id="roles" resultType="java.lang.String">
+        select
+            r.`name`
+        from sys_role r left join sys_admin a on r.id = a.role_id
+        where a.id = #{adminId}
+    </select>
+
+    <delete id="deleteRoleMenu">
+        delete from sys_role_menu where role_id = #{roleId}
+    </delete>
+    
+    <insert id="roleMenu" >
+        insert into sys_role_menu(role_id, menu_id)
+        values
+        <foreach collection="menuIds" item="menuId" separator=",">
+            (${roleId},${menuId})
+        </foreach>
+    </insert>
+
+    <select id="getRoles" resultType="com.fisher.fishspear.entity.SysRole">
+        select r.*
+        from sys_user u right join sys_user_role ur on u.id = ur.user_id
+        right join sys_role r on ur.role_id = r.id
+        where u.id = #{userId} and r.del = 0
+    </select>
+
+    <select id="selectTreeData" resultType="com.fisher.fishspear.model.RoleTreeNode">
+        SELECT
+        r1.id,
+        r2.id as pid,
+        r1.name as `name`,
+        r2.name as `pname`,
+        r1.name as text,
+        r1.tips as tips
+        FROM sys_role r1
+        LEFT JOIN sys_role r2
+        ON r1.pid = r2.id
+        where 1 = 1
+        <if test="ids != null">
+            and r1.id in
+            <foreach collection="ids" item="id" open="(" close=")" separator=",">
+                ${id}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="list" resultType="com.fisher.fishspear.entity.SysRole">
+        select
+        <include refid="Base_Column_List"/>
+        from sys_role
+    </select>
+
+    <!--查询角色的下级角色-->
+    <select id="getChildren" resultType="java.lang.Integer">
+        select id
+        from sys_role
+        where pids like concat('%', #{roleId}, '%')
+        and del = 0
+    </select>
+
+    <select id="count" resultType="java.lang.Integer">
+        select
+            count(*)
+        from sys_admin
+        where role_id = #{roleId}
+    </select>
+
+</mapper>
