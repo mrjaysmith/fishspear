@@ -71,4 +71,8 @@ public class TreeNode implements Serializable {
      * 子菜单
      */
     private List<TreeNode> children;
+    /**
+     * 备注
+     */
+    private String remark;
 }
